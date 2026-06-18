@@ -1,5 +1,5 @@
 """
-Delivery layer — sends digests via Slack webhook.
+Delivery layer — sends digests and daily summaries via Slack webhook.
 """
 
 import datetime
@@ -37,17 +37,53 @@ def send_slack_daily(stories: list):
     if not webhook:
         log.warning("No SLACK_WEBHOOK_URL set — skipping daily Slack update")
         return
+
+    # Sort keepers by total score descending
     kept = [s for s in stories if s.get("keep")]
+    kept.sort(key=lambda s: sum(s.get("scores", {}).values()), reverse=True)
+    skipped = [s for s in stories if not s.get("keep")]
+
     lines = [
         "*:newspaper: Nooks daily intake — {}*".format(datetime.date.today()),
-        "Scored {} stories · {} keepers".format(len(stories), len(kept)),
+        "Scored {} stories · {} keepers · {} skipped".format(len(stories), len(kept), len(skipped)),
         "",
+        "*Top stories:*",
     ]
-    for s in kept[:8]:
-        lines.append("• *{}* — {}".format(s.get("source", ""), s.get("headline", "")[:80]))
-    resp = requests.post(webhook, json={"text": "\n".join(lines)}, timeout=10)
-    resp.raise_for_status()
-    log.info("Daily Slack summary sent (%d keepers)", len(kept))
+
+    for i, s in enumerate(kept[:50], 1):
+        score = sum(s.get("scores", {}).values())
+        link = s.get("link", "")
+        headline = s.get("headline", "")
+        why = s.get("why_it_matters", "")
+        nooks = s.get("nooks_angle", "")
+        line = "{}. <{}|{}>".format(i, link, headline) if link else "{}. {}".format(i, headline)
+        if why:
+            line += "\n    _{}_".format(why)
+        if nooks:
+            line += "\n    :nooks: {}".format(nooks)
+        line += "\n    Score: {} · {}".format(score, s.get("virality_signal", ""))
+        lines.append(line)
+        lines.append("")
+
+    if skipped:
+        lines.append("*Also scraped (not kept):*")
+        for s in skipped[:20]:
+            link = s.get("link", "")
+            headline = s.get("headline", "")
+            src = s.get("source", "")
+            if link:
+                lines.append("• <{}|{}> _({})_".format(link, headline, src))
+            else:
+                lines.append("• {} _({})_".format(headline, src))
+
+    # Slack has a 40k char limit — chunk into multiple messages if needed
+    full_text = "\n".join(lines)
+    chunks = [full_text[i:i+3800] for i in range(0, len(full_text), 3800)]
+    for chunk in chunks:
+        resp = requests.post(webhook, json={"text": chunk}, timeout=10)
+        resp.raise_for_status()
+
+    log.info("Daily Slack summary sent (%d keepers, %d chunks)", len(kept), len(chunks))
 
 
 def deliver(digest: dict):
