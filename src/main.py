@@ -17,7 +17,7 @@ import schedule
 
 from collector import collect_all
 from scorer import score_stories
-from delivery import send_slack_daily
+from delivery import send_slack_daily, maybe_send_keepalive_reminder
 
 Path("logs").mkdir(exist_ok=True)
 
@@ -40,6 +40,7 @@ def daily_job():
         scored = score_stories(stories)
         log.info("Scored %d stories", len(scored))
         send_slack_daily(scored)
+        maybe_send_keepalive_reminder(scored)
         log.info("Daily job complete")
     except Exception as e:
         log.exception("Daily job failed: %s", e)

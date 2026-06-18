@@ -88,3 +88,14 @@ def deliver(digest: dict):
         send_slack_all_variants(digest)
     except Exception as e:
         log.error("Slack delivery failed: %s", e)
+
+
+def maybe_send_keepalive_reminder(stories: list):
+    """Every 6 weeks, remind in Slack to keep the GitHub Actions workflow alive."""
+    import datetime
+    today = datetime.date.today()
+    # Week 1 and week 7 of the year, roughly every 6 weeks
+    if today.isocalendar()[1] % 6 == 0 and today.weekday() == 0:
+        webhook = __import__("os").environ.get("SLACK_WEBHOOK_URL", "")
+        if webhook:
+            __import__("requests").post(webhook, json={"text": ":warning: *Heads up:* GitHub disables scheduled Actions after 60 days of repo inactivity. If the bot stops posting, go to github.com/taliakusmirek/NooksGrowthBot/actions and re-enable the workflow."}, timeout=10)
