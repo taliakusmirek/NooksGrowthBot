@@ -142,3 +142,25 @@ def deliver(digest):
             send_gmail(digest)
         except Exception as e:
             log.error("Gmail delivery failed: %s", e)
+
+
+def send_slack_daily(stories: list):
+    import datetime
+    webhook = os.environ.get("SLACK_WEBHOOK_URL", "")
+    if not webhook:
+        log.warning("No SLACK_WEBHOOK_URL set — skipping daily Slack update")
+        return
+    kept = [s for s in stories if s.get("keep")]
+    lines = [
+        f"*:newspaper: Nooks daily intake — {datetime.date.today()}*",
+        f"Scored {len(stories)} stories · {len(kept)} keepers",
+        "",
+    ]
+    for s in kept[:8]:
+        lines.append(f"• *{s['source']}* — {s['headline'][:80]}")
+    try:
+        resp = requests.post(webhook, json={"text": "\n".join(lines)}, timeout=10)
+        resp.raise_for_status()
+        log.info("Daily Slack summary sent (%d keepers)", len(kept))
+    except Exception as e:
+        log.error("Daily Slack send failed: %s", e)
