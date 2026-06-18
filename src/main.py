@@ -74,11 +74,11 @@ def main():
     if not any([args.daily, args.friday, args.schedule]):
         args.schedule = True
     if args.schedule:
-        schedule.every().monday.at("08:00").do(daily_job)
-        schedule.every().tuesday.at("08:00").do(daily_job)
-        schedule.every().wednesday.at("08:00").do(daily_job)
-        schedule.every().thursday.at("08:00").do(daily_job)
-        schedule.every().friday.at("08:00").do(daily_job)
+        schedule.every().monday.at("16:00").do(daily_job)
+        schedule.every().tuesday.at("16:00").do(daily_job)
+        schedule.every().wednesday.at("16:00").do(daily_job)
+        schedule.every().thursday.at("16:00").do(daily_job)
+        schedule.every().friday.at("16:00").do(daily_job)
         schedule.every().friday.at("14:00").do(friday_job)
         log.info("Scheduler running: daily 08:00 UTC, Friday digest 14:00 UTC")
         while True:
