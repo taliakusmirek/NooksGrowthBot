@@ -110,39 +110,6 @@ def send_gmail(digest):
     log.info("Gmail digest sent to %s", os.environ.get("GMAIL_TO", "?"))
 
 
-def send_slack_daily(stories: list):
-    import datetime
-    webhook = os.environ.get("SLACK_WEBHOOK_URL", "")
-    if not webhook:
-        log.warning("No SLACK_WEBHOOK_URL set — skipping daily Slack update")
-        return
-    kept = [s for s in stories if s.get("keep")]
-    lines = [f"*:newspaper: Nooks daily intake — {datetime.date.today()}*",
-             f"Scored {len(stories)} stories · {len(kept)} keepers", ""]
-    for s in kept[:8]:
-        lines.append(f"• *{s['source']}* — {s['headline'][:80]}")
-    try:
-        resp = requests.post(webhook, json={"text": "
-".join(lines)}, timeout=10)
-        resp.raise_for_status()
-        log.info("Daily Slack summary sent (%d keepers)", len(kept))
-    except Exception as e:
-        log.error("Daily Slack send failed: %s", e)
-
-
-def deliver(digest):
-    method = os.environ.get("DELIVERY_METHOD", "slack").lower()
-    if method in ("slack", "both"):
-        try:
-            send_slack_all_variants(digest)
-        except Exception as e:
-            log.error("Slack delivery failed: %s", e)
-    if method in ("gmail", "both"):
-        try:
-            send_gmail(digest)
-        except Exception as e:
-            log.error("Gmail delivery failed: %s", e)
-
 
 def send_slack_daily(stories: list):
     import datetime
@@ -152,14 +119,16 @@ def send_slack_daily(stories: list):
         return
     kept = [s for s in stories if s.get("keep")]
     lines = [
-        f"*:newspaper: Nooks daily intake — {datetime.date.today()}*",
-        f"Scored {len(stories)} stories · {len(kept)} keepers",
+        "*:newspaper: Nooks daily intake — {}*".format(datetime.date.today()),
+        "Scored {} stories · {} keepers".format(len(stories), len(kept)),
         "",
     ]
     for s in kept[:8]:
-        lines.append(f"• *{s['source']}* — {s['headline'][:80]}")
+        src = s.get("source", "")
+        hed = s.get("headline", "")[:80]
+        lines.append("• *{}* — {}".format(src, hed))
     try:
-        resp = requests.post(webhook, json={"text": "\n".join(lines)}, timeout=10)
+        resp = requests.post(webhook, json={"text": chr(10).join(lines)}, timeout=10)
         resp.raise_for_status()
         log.info("Daily Slack summary sent (%d keepers)", len(kept))
     except Exception as e:
