@@ -1,5 +1,5 @@
 """
-Friday digest builder -- three tone variants via Claude.
+Friday digest builder — three tone variants via Groq (free tier, llama-3.3-70b).
 """
 
 import json
@@ -8,7 +8,7 @@ import os
 from datetime import datetime, timezone, timedelta
 from pathlib import Path
 
-import anthropic
+from openai import OpenAI
 
 log = logging.getLogger(__name__)
 
@@ -16,8 +16,10 @@ SCORED_FILE = Path(__file__).parent.parent / "data" / "scored_inbox.json"
 DIGEST_FILE = Path(__file__).parent.parent / "data" / "weekly_digest.json"
 ARCHIVE_FILE = Path(__file__).parent.parent / "data" / "digest_archive.json"
 
+MODEL = "llama-3.3-70b-versatile"
+
 DIGEST_PROMPT = """\
-You are the editor of "The Week, According to Nooks" -- a weekly LinkedIn / social roundup
+You are the editor of "The Week, According to Nooks" — a weekly LinkedIn / social roundup
 published by Nooks (an AI-powered sales dialer / revenue intelligence startup).
 
 Writing rules (non-negotiable):
@@ -42,25 +44,23 @@ Target structure (10 bullets, this order):
 
 Closing line (always): "and it's not even end of quarter yet 💜"
 
-Produce all three variants labeled exactly as shown:
+TONE VARIANTS — produce all three, labeled exactly as shown:
 
 === SAFE ===
-Professional but warm.
+Professional but warm. Nooks sounds sharp and self-aware.
 
 === FUNNY ===
-Dry wit. Light sarcasm.
+Dry wit. Light sarcasm. Nooks sounds like the funniest person in the room.
 
 === SPICY ===
-Takes a stance. Slightly edgy. Still safe for B2B.
+Takes a stance. Slightly edgy. Nooks has a real opinion. Still safe for B2B.
 
 ---
-Top keeper stories this week:
+Here are the top keeper stories from this week:
 
 {stories_json}
 
 Pick the 10 best. Mark any slot with no good match as [PLACEHOLDER -- needs real data].
-
-Return format:
 
 === SAFE ===
 the week, according to Nooks:
@@ -84,6 +84,13 @@ the week, according to Nooks:
 
 and it's not even end of quarter yet 💜
 """
+
+
+def _groq_client():
+    return OpenAI(
+        api_key=os.environ["GROQ_API_KEY"],
+        base_url="https://api.groq.com/openai/v1",
+    )
 
 
 def _week_cutoff():
@@ -110,7 +117,7 @@ def load_keepers():
 
 
 def build_digest(keepers):
-    client = anthropic.Anthropic(api_key=os.environ["ANTHROPIC_API_KEY"])
+    client = _groq_client()
     minimal = [
         {
             "headline": s["headline"],
@@ -124,12 +131,13 @@ def build_digest(keepers):
         for s in keepers[:40]
     ]
     prompt = DIGEST_PROMPT.format(stories_json=json.dumps(minimal, indent=2))
-    message = client.messages.create(
-        model="claude-sonnet-4-6",
-        max_tokens=4096,
+    resp = client.chat.completions.create(
+        model=MODEL,
         messages=[{"role": "user", "content": prompt}],
+        max_tokens=4096,
+        temperature=0.7,
     )
-    raw = message.content[0].text.strip()
+    raw = resp.choices[0].message.content.strip()
 
     def extract_variant(label):
         marker = f"=== {label} ==="

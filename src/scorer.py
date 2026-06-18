@@ -1,5 +1,5 @@
 """
-Scores raw stories using Claude.
+Scores raw stories using Groq (free tier, llama-3.3-70b).
 """
 
 import json
@@ -7,15 +7,17 @@ import logging
 import os
 from pathlib import Path
 
-import anthropic
+from openai import OpenAI
 
 log = logging.getLogger(__name__)
 
 INBOX_FILE = Path(__file__).parent.parent / "data" / "trend_inbox.json"
 SCORED_FILE = Path(__file__).parent.parent / "data" / "scored_inbox.json"
 
+MODEL = "llama-3.3-70b-versatile"
+
 SCORING_PROMPT = """\
-You are the editor of "The Week, According to Nooks" -- a weekly content roundup published
+You are the editor of "The Week, According to Nooks" — a weekly content roundup published
 by Nooks (an AI-powered sales dialer / revenue intelligence startup).
 
 Your job is to triage a batch of news stories and decide which are worth keeping.
@@ -32,11 +34,18 @@ For each story below, respond with a JSON array. Each object must have exactly t
 - nooks_angle: one sentence tying this to Nooks' world (omit if keep=false)
 - scores: object with integer fields surprise, relevance, cultural, nooks_angle, shareability (each 1-5; omit if keep=false)
 
-Respond with ONLY valid JSON -- no markdown fences, no explanation.
+Respond with ONLY valid JSON — no markdown fences, no explanation.
 
 STORIES:
 {stories_json}
 """
+
+
+def _groq_client():
+    return OpenAI(
+        api_key=os.environ["GROQ_API_KEY"],
+        base_url="https://api.groq.com/openai/v1",
+    )
 
 
 def _chunk(lst, n):
@@ -47,19 +56,24 @@ def _chunk(lst, n):
 def score_stories(stories):
     if not stories:
         return []
-    client = anthropic.Anthropic(api_key=os.environ["ANTHROPIC_API_KEY"])
+    client = _groq_client()
     scored = []
     for batch in _chunk(stories, 20):
         minimal = [{"id": s["id"], "headline": s["headline"], "source": s["source"],
                     "category": s["category"], "summary": s["summary"]} for s in batch]
         prompt = SCORING_PROMPT.format(stories_json=json.dumps(minimal, indent=2))
         try:
-            message = client.messages.create(
-                model="claude-sonnet-4-6",
-                max_tokens=4096,
+            resp = client.chat.completions.create(
+                model=MODEL,
                 messages=[{"role": "user", "content": prompt}],
+                max_tokens=4096,
+                temperature=0.2,
             )
-            raw = message.content[0].text.strip()
+            raw = resp.choices[0].message.content.strip()
+            if raw.startswith("```"):
+                raw = raw.split("```")[1]
+                if raw.startswith("json"):
+                    raw = raw[4:]
             results = json.loads(raw)
         except Exception as e:
             log.error("Scoring batch failed: %s", e)
