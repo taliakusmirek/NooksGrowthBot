@@ -17,12 +17,10 @@ AI_STARTUP_FEEDS = [
     {"name": "VentureBeat AI", "url": "https://venturebeat.com/category/ai/feed/", "category": "AI Startup"},
     {"name": "TechCrunch AI", "url": "https://techcrunch.com/category/artificial-intelligence/feed/", "category": "AI Startup"},
     {"name": "YC Blog", "url": "https://www.ycombinator.com/blog/rss.xml", "category": "AI Startup"},
-    {"name": "a16z", "url": "https://a16z.com/feed/", "category": "AI Startup"},
-    {"name": "MIT Tech Review AI", "url": "https://www.technologyreview.com/feed/", "category": "AI Startup"},
+        {"name": "MIT Tech Review AI", "url": "https://www.technologyreview.com/feed/", "category": "AI Startup"},
     {"name": "TLDR AI", "url": "https://tldr.tech/rss/ai.rss", "category": "AI Startup"},
     {"name": "Import AI", "url": "https://jack-clark.net/feed/", "category": "AI Startup"},
-    {"name": "The Rundown AI", "url": "https://api.beehiiv.com/v2/publications/pub_your_id/feed", "category": "AI Startup"},
-]
+    ]
 
 GTM_SALES_FEEDS = [
     {"name": "Sales Hacker", "url": "https://www.saleshacker.com/feed/", "category": "GTM/Sales"},
