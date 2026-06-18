@@ -29,6 +29,9 @@ HEADERS = {
         "+https://github.com/taliakusmirek/nooksgrowthbot)"
     )
 }
+REDDIT_HEADERS = {
+    "User-Agent": "NooksGrowthBot/1.0 by nooks_growth_bot"
+}
 
 
 def _story_id(url, title):
@@ -67,7 +70,8 @@ def _clean_summary(raw):
 def fetch_feed(feed_def, seen, cutoff):
     stories = []
     try:
-        resp = requests.get(feed_def["url"], headers=HEADERS, timeout=15)
+        hdrs = REDDIT_HEADERS if "reddit.com" in feed_def["url"] else HEADERS
+        resp = requests.get(feed_def["url"], headers=hdrs, timeout=15)
         resp.raise_for_status()
         parsed = feedparser.parse(resp.text)
     except Exception as e:
