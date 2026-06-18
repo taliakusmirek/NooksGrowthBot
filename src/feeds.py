@@ -34,7 +34,7 @@ AI_STARTUP_FEEDS = [
     {"name": "r/MachineLearning", "url": "https://www.reddit.com/r/MachineLearning/.rss?limit=25", "category": "AI Startup"},
     {"name": "r/startups", "url": "https://www.reddit.com/r/startups/.rss?limit=25", "category": "AI Startup"},
     {"name": "r/LocalLLaMA", "url": "https://www.reddit.com/r/LocalLLaMA/.rss?limit=25", "category": "AI Startup"},
-    {"name": "TLDR AI", "url": "https://tldr.tech/ai/rss", "category": "AI Startup"},
+    {"name": "TLDR AI", "url": "https://tldr.tech/rss/ai.rss", "category": "AI Startup"},
     {"name": "The Batch", "url": "https://www.deeplearning.ai/the-batch/feed/", "category": "AI Startup"},
     {"name": "Import AI", "url": "https://jack-clark.net/feed/", "category": "AI Startup"},
     {"name": "AI Breakfast", "url": "https://aibreakfast.beehiiv.com/feed", "category": "AI Startup"},
@@ -42,15 +42,15 @@ AI_STARTUP_FEEDS = [
 
 GTM_SALES_FEEDS = [
     {"name": "Sales Hacker", "url": "https://www.saleshacker.com/feed/", "category": "GTM/Sales"},
-    {"name": "Gong Blog", "url": "https://www.gong.io/blog/feed/", "category": "GTM/Sales"},
+    {"name": "Gong Blog", "url": "https://www.gong.io/blog/rss/", "category": "GTM/Sales"},
     {"name": "HubSpot Sales", "url": "https://blog.hubspot.com/sales/rss.xml", "category": "GTM/Sales"},
     {"name": "Clay Blog", "url": "https://www.clay.com/blog/rss.xml", "category": "GTM/Sales"},
     {"name": "r/sales", "url": "https://www.reddit.com/r/sales/.rss?limit=25", "category": "GTM/Sales"},
     {"name": "r/salesforce", "url": "https://www.reddit.com/r/salesforce/.rss?limit=15", "category": "GTM/Sales"},
     {"name": "Lenny's Newsletter", "url": "https://www.lennysnewsletter.com/feed", "category": "GTM/Sales"},
-    {"name": "Mostly Metrics", "url": "https://www.mostlymetrics.com/feed", "category": "GTM/Sales"},
+    {"name": "Mostly Metrics", "url": "https://mostlymetrics.substack.com/feed", "category": "GTM/Sales"},
     {"name": "The GTM Newsletter", "url": "https://thegtmnewsletter.substack.com/feed", "category": "GTM/Sales"},
-    {"name": "Demand Curve", "url": "https://www.demandcurve.com/newsletter/rss.xml", "category": "GTM/Sales"},
+    {"name": "Demand Curve", "url": "https://newsletter.demandcurve.com/feed", "category": "GTM/Sales"},
     {"name": "Kyle Poyar Growth Unhinged", "url": "https://kylepoyar.substack.com/feed", "category": "GTM/Sales"},
 ]
 
@@ -59,7 +59,7 @@ CULTURE_FEEDS = [
     {"name": "Mashable", "url": "https://mashable.com/feeds/rss/all", "category": "Weird Internet"},
     {"name": "IFL Science", "url": "https://www.iflscience.com/rss.xml", "category": "Weird Internet"},
     {"name": "Defector", "url": "https://defector.com/feed", "category": "Culture"},
-    {"name": "Vulture", "url": "https://www.vulture.com/feed/all.xml", "category": "Culture"},
+    {"name": "Vulture", "url": "https://www.vulture.com/rss/news.xml", "category": "Culture"},
     {"name": "Know Your Meme", "url": "https://knowyourmeme.com/newsfeed.rss", "category": "Weird Internet"},
     {"name": "Weird Universe", "url": "https://www.weirduniverse.net/blog/atom.xml", "category": "Weird Internet"},
     {"name": "r/OutOfTheLoop", "url": "https://www.reddit.com/r/OutOfTheLoop/.rss?limit=25", "category": "Weird Internet"},

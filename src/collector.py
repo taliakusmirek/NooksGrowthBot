@@ -4,6 +4,7 @@ raw story dicts ready for scoring.
 """
 
 import hashlib
+import time
 import json
 import logging
 import os
