@@ -1,7 +1,6 @@
 """
 Entry point. Usage:
-  python main.py --daily        collect + score
-  python main.py --friday       build + deliver digest
+  python main.py --daily        collect + score + send to Slack
   python main.py --schedule     run as 24/7 scheduler (default)
 """
 
@@ -17,9 +16,8 @@ load_dotenv(Path(__file__).parent.parent / ".env")
 import schedule
 
 from collector import collect_all
-from scorer import run_daily_scoring
-from digest import run_friday_digest
-from delivery import deliver, send_slack_daily
+from scorer import score_stories
+from delivery import send_slack_daily
 
 Path("logs").mkdir(exist_ok=True)
 
@@ -39,39 +37,23 @@ def daily_job():
     try:
         stories = collect_all()
         log.info("Collected %d new stories", len(stories))
-        from scorer import load_unscored
-        from json import loads
-        from pathlib import Path as _P
-        scored_path = _P(__file__).parent.parent / "data" / "scored_inbox.json"
-        scored = loads(scored_path.read_text()) if scored_path.exists() else []
+        scored = score_stories(stories)
+        log.info("Scored %d stories", len(scored))
         send_slack_daily(scored)
         log.info("Daily job complete")
     except Exception as e:
         log.exception("Daily job failed: %s", e)
 
 
-def friday_job():
-    log.info("=== Friday digest build + delivery ===")
-    try:
-        digest = run_friday_digest()
-        deliver(digest)
-        log.info("Friday digest delivered")
-    except Exception as e:
-        log.exception("Friday job failed: %s", e)
-
-
 def main():
     parser = argparse.ArgumentParser()
     parser.add_argument("--daily", action="store_true")
-    parser.add_argument("--friday", action="store_true")
     parser.add_argument("--schedule", action="store_true")
     args = parser.parse_args()
 
     if args.daily:
         daily_job()
-    if args.friday:
-        friday_job()
-    if not any([args.daily, args.friday, args.schedule]):
+    if not any([args.daily, args.schedule]):
         args.schedule = True
     if args.schedule:
         schedule.every().monday.at("16:00").do(daily_job)
@@ -79,8 +61,7 @@ def main():
         schedule.every().wednesday.at("16:00").do(daily_job)
         schedule.every().thursday.at("16:00").do(daily_job)
         schedule.every().friday.at("16:00").do(daily_job)
-        schedule.every().friday.at("14:00").do(friday_job)
-        log.info("Scheduler running: daily 08:00 UTC, Friday digest 14:00 UTC")
+        log.info("Scheduler running: daily Mon-Fri 16:00 UTC (8am PST)")
         while True:
             schedule.run_pending()
             time.sleep(60)
