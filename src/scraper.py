@@ -151,79 +151,6 @@ def scrape_rundown():
     return stories
 
 
-def scrape_reddit_oauth():
-    """
-    Fetch Reddit posts using OAuth (required for reliable access).
-    Set REDDIT_CLIENT_ID, REDDIT_CLIENT_SECRET in .env to enable.
-    Without these, Reddit blocks anonymous RSS requests with 429.
-    """
-    client_id = __import__("os").environ.get("REDDIT_CLIENT_ID", "")
-    client_secret = __import__("os").environ.get("REDDIT_CLIENT_SECRET", "")
-    if not client_id or not client_secret:
-        log.info("Reddit OAuth not configured — skipping (set REDDIT_CLIENT_ID + REDDIT_CLIENT_SECRET)")
-        return []
-
-    stories = []
-    subreddits = [
-        ("r/artificial", "AI Startup"),
-        ("r/MachineLearning", "AI Startup"),
-        ("r/LocalLLaMA", "AI Startup"),
-        ("r/startups", "AI Startup"),
-        ("r/sales", "GTM/Sales"),
-        ("r/salesforce", "GTM/Sales"),
-        ("r/OutOfTheLoop", "Weird Internet"),
-        ("r/todayilearned", "Weird Internet"),
-        ("r/worldnews", "Culture"),
-        ("r/nba", "Culture"),
-        ("r/formula1", "Culture"),
-    ]
-
-    try:
-        auth = requests.auth.HTTPBasicAuth(client_id, client_secret)
-        token_resp = requests.post(
-            "https://www.reddit.com/api/v1/access_token",
-            auth=auth,
-            data={"grant_type": "client_credentials"},
-            headers={"User-Agent": "NooksGrowthBot/1.0 by nooks_growth"},
-            timeout=10,
-        )
-        token_resp.raise_for_status()
-        token = token_resp.json().get("access_token", "")
-        if not token:
-            log.warning("Reddit OAuth token empty")
-            return []
-
-        api_headers = {
-            "Authorization": "Bearer {}".format(token),
-            "User-Agent": "NooksGrowthBot/1.0 by nooks_growth",
-        }
-
-        for sub, category in subreddits:
-            try:
-                r = requests.get(
-                    "https://oauth.reddit.com/{}/hot.json?limit=10".format(sub),
-                    headers=api_headers,
-                    timeout=10,
-                )
-                r.raise_for_status()
-                for post in r.json().get("data", {}).get("children", []):
-                    d = post.get("data", {})
-                    title = d.get("title", "")
-                    url = d.get("url", "")
-                    permalink = "https://reddit.com" + d.get("permalink", "")
-                    if title and url:
-                        stories.append(_base(sub, category, url, title, "Via {}".format(permalink)))
-                time.sleep(1)
-            except Exception as e:
-                log.warning("Reddit %s failed: %s", sub, e)
-
-        log.info("Reddit OAuth -> %d stories", len(stories))
-    except Exception as e:
-        log.warning("Reddit OAuth setup failed: %s", e)
-
-    return stories
-
-
 def scrape_x_trends():
     stories = []
     try:
@@ -251,7 +178,6 @@ def scrape_all():
     results.extend(scrape_anthropic())
     results.extend(scrape_a16z())
     results.extend(scrape_rundown())
-    results.extend(scrape_reddit_oauth())
     results.extend(scrape_x_trends())
     return results
 
