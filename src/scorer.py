@@ -94,11 +94,14 @@ def score_stories(stories):
     return scored
 
 
-def load_unscored():
+def load_unscored() -> list[dict]:
     if not INBOX_FILE.exists():
         return []
     stories = json.loads(INBOX_FILE.read_text())
-    return [s for s in stories if s.get("keep") is None]
+    already_scored = set()
+    if SCORED_FILE.exists():
+        already_scored = {s["id"] for s in json.loads(SCORED_FILE.read_text())}
+    return [s for s in stories if s.get("keep") is None and s["id"] not in already_scored]
 
 
 def save_scored(stories):

@@ -19,7 +19,7 @@ import schedule
 from collector import collect_all
 from scorer import run_daily_scoring
 from digest import run_friday_digest
-from delivery import deliver
+from delivery import deliver, send_slack_daily
 
 Path("logs").mkdir(exist_ok=True)
 
@@ -39,7 +39,12 @@ def daily_job():
     try:
         stories = collect_all()
         log.info("Collected %d new stories", len(stories))
-        run_daily_scoring()
+        from scorer import load_unscored
+        from json import loads
+        from pathlib import Path as _P
+        scored_path = _P(__file__).parent.parent / "data" / "scored_inbox.json"
+        scored = loads(scored_path.read_text()) if scored_path.exists() else []
+        send_slack_daily(scored)
         log.info("Daily job complete")
     except Exception as e:
         log.exception("Daily job failed: %s", e)
